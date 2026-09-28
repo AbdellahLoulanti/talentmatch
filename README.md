@@ -7,7 +7,6 @@ SaaS de recrutement multi-tenant avec analyse IA des CV (OCR, LLM, recherche sé
 ```
 backend/   API Spring Boot 3 (Java 21, Maven)
 frontend/  React + TypeScript + Vite + Tailwind CSS
-infra/     docker-compose, Nginx, scripts
 docs/      architecture, captures
 ```
 
@@ -17,31 +16,46 @@ docs/      architecture, captures
 - Node.js 20+
 - Docker (pour PostgreSQL)
 
-## Démarrage
+## Démarrer en local
 
-```bash
-# Base de données
-docker compose -f infra/docker-compose.yml up -d
+Prérequis : Docker et Docker Compose installés.
 
-# Backend (http://localhost:8080)
-cd backend
-./mvnw spring-boot:run        # Windows : .\mvnw.cmd spring-boot:run
+1. Copier le fichier d'environnement d'exemple et ajuster les valeurs si besoin :
+   ```bash
+   cp .env.example .env
+   ```
 
-# Frontend (http://localhost:5173)
-cd frontend
-npm install
-npm run dev
-```
+2. Renseigner `GEMINI_API_KEY` dans `.env` (clé créée sur https://aistudio.google.com/apikey) : l'IA passe par Gemini.
 
-## Build
+3. Lancer les services :
+   ```bash
+   docker compose up -d --build
+   ```
+   Cela démarre :
+   - **postgres** (`pgvector/pgvector:pg16`) — base de données
+   - **minio** — stockage des CV
+   - **mailpit** — réception des e-mails de test
+   - **backend** — API Spring Boot
+   - **frontend** — application React (nginx)
 
-```bash
-cd backend && ./mvnw verify
-cd frontend && npm run build
-```
+4. Vérifier que tout est démarré et sain :
+   ```bash
+   docker compose ps
+   ```
 
+| Service    | URL locale                        | Identifiants par défaut          |
+|------------|------------------------------------|-----------------------------------|
+| PostgreSQL | `localhost:5432`                   | `talentmatch` / voir `.env` |
+| MinIO      | http://localhost:9001 (console)    | `minioadmin` / voir `.env`  |
+| Mailpit    | http://localhost:8025 (UI)         | —                                 |
+| Backend    | http://localhost:8000              | —                                 |
+| Frontend   | http://localhost:3000              | —                                 |
+
+Pour tout arrêter : `docker compose down` (ajouter `-v` pour aussi supprimer les volumes de données).
 ## Conventions
 
 - `main` : version stable, `develop` : intégration.
 - Une branche par issue, créée depuis `develop` : `feature/TM-xx-nom`.
 - Toute fusion passe par une pull request vers `develop`, relue et approuvée par le binôme.
+
+```
